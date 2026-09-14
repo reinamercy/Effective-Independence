@@ -1,0 +1,4 @@
+# Local assistant/tooling configuration, not part of the research artifact.
+.claude/
+CLAUDE.md
+.DS_Store

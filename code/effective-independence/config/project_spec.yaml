@@ -1,0 +1,118 @@
+# FROZEN PROJECT SPEC
+# This file is the source of truth for the "Effective Independence" project.
+# Do not modify without explicit approval from the project owner.
+# See logs/decisions.md for rationale behind any later amendments.
+
+project:
+  title: "Effective Independence: Quantifying the Reliability Ceiling of Same-Base-Model Ensembles in LLM Agent Pipelines"
+  short_title: "effective-independence"
+  target_venue: "COLM/NeurIPS/ICLR workshop track"
+  target_length_pages: [4, 8]
+  deadline_weeks: 6
+  access_mode: "API-only"  # no local weights, no fine-tuning, no activation access, no GPU
+
+constraints:
+  cache_every_api_call: true
+  never_recall_cached_tuple: true  # (model, prompt, temperature, seed) tuples are never re-fetched
+  cost_ceiling_usd: 300
+  single_run_flag_threshold_usd: 20  # flag before any single run projected to exceed this
+  full_generation_pause_threshold_usd: 150  # pause for confirmation if projected cost exceeds this
+
+datasets:
+  total_questions_target: 30  # shrunk 800 -> 150 -> 30 on 2026-08-12 — see logs/decisions.md
+                                # (real observed free-tier quota: 20 requests/day/model, not the
+                                # 250-1500/day public docs suggested; 8 of 12 configs share one
+                                # model's daily budget, so 150 questions would have taken ~60 days)
+  items:
+    - name: "GPQA-Diamond"
+      full_n: 198
+      approx_n: 8
+      format: "multiple_choice"
+      domain: "hard science"
+      grading: "exact_letter_match_regex"
+    - name: "MATH"
+      levels: [4, 5]
+      full_n: 300
+      approx_n: 11
+      format: "free_response"
+      grading: "symbolic_numeric_equivalence"
+    - name: "SimpleQA"
+      full_n: 300
+      approx_n: 11
+      format: "free_response"
+      grading: "normalized_string_containment_with_llm_fallback"
+      llm_fallback_expected_rate: [0.10, 0.15]  # expected fraction requiring LLM-judge fallback
+
+configurations:
+  total: 12
+  per_axis: 3
+  sampling: "exactly 1 sample per (question, config) pair in the main run"
+  sampling_rationale: >
+    Measuring cross-config error correlation, not within-config variance;
+    multiple samples per config are out of scope for the main run.
+  axes:
+    - name: "prompt_diverse"
+      fixed: "one mid-tier model, temperature 0.7"
+      varies: "3 distinct system-prompt personas"
+      personas: ["careful analyst", "confident expert", "skeptical reviewer"]
+    - name: "temperature_diverse"
+      fixed: "one mid-tier model, one fixed neutral prompt"
+      varies: "temperature in {0.3, 0.7, 1.0}"
+    - name: "size_diverse"
+      fixed: "one model family"
+      varies: "3 sizes: small, medium, flagship"
+    - name: "family_diverse"
+      fixed: "one fixed neutral prompt, temperature 0.7"
+      varies: "3 different labs' flagship or near-flagship models"
+
+models:
+  status: "REVISED 2026-08-29 (2nd OpenRouter rotation) — see config/models.yaml and logs/decisions.md"
+  note: >
+    Original Claude/GPT/Gemini-Pro set required a funded Anthropic account,
+    which the project owner does not have. Revised to an all-free-tier set:
+    Gemini (Flash-Lite/Flash/3.7-Flash) for prompt/temperature/size axes, plus
+    OpenRouter free-tier open-weight models (Zhipu AI GLM-5.2, NVIDIA
+    Nemotron-3-Ultra) for family_diverse (3rd slot is Gemini Flash again).
+    family_diverse is therefore Google/Zhipu AI/NVIDIA lab diversity but mixes
+    closed-weight (Gemini) and open-weight (GLM, Nemotron) models rather
+    than 3 closed frontier flagships as originally specified — framed
+    accordingly in the paper. OpenRouter's free-model lineup rotates; the
+    exact slugs were re-verified live immediately before the Phase 1 pilot
+    (the originally-planned Llama 3.3 70B / DeepSeek R1 slugs had already
+    been pulled from the free tier by the time of the pilot), AND AGAIN on
+    2026-08-29 mid-Phase-2 when the pilot-verified OpenAI gpt-oss-20b:free
+    slug was permanently de-listed (404, not quota) -- swapped to
+    z-ai/glm-5.2:free after re-querying the live model list a second time.
+    Gemini's real free-tier daily quota (RPD=20/model, confirmed live, far
+    below public docs) is the binding constraint on how fast the 8 configs
+    sharing gemini-3.5-flash complete.
+
+grading_rules:
+  gpqa:
+    method: "exact_letter_match"
+    detail: "extract via regex on a constrained final-answer format enforced in the prompt"
+  math:
+    method: "symbolic_numeric_equivalence"
+    detail: "use an existing equivalence-checking library (e.g. math_verify); do not hand-roll a parser"
+  simpleqa:
+    method: "normalized_string_containment_then_llm_fallback"
+    detail: "ambiguous cases fall back to a separate LLM-judge call, logged and hand-audited"
+
+phase_gates:
+  phase_0: "Scaffold only. No API calls. Stop for review."
+  phase_1: "Harness build + 50-question pilot across all 12 configs. Stop for hand-audit confirmation before full generation."
+  phase_2: "Full ~800 x 12 generation. Pause for confirmation if projected cost > full_generation_pause_threshold_usd."
+  phase_3: "Analysis + required figures. Decision gate for project owner — do not auto-proceed to phase 4."
+  phase_4: "Budget-matched allocation experiment. Only after explicit go-ahead."
+  phase_5: "Paper writing — not delegated to Claude Code."
+
+engineering_rules:
+  - "Cache everything, always. No direct uncached API calls."
+  - "Never silently expand scope — propose and wait for approval."
+  - "Log every non-obvious decision to logs/decisions.md."
+  - "Fail loud on data quality issues (e.g. grader marking everything wrong); fail quiet on infra issues (e.g. single malformed API response)."
+  - "Every script must be idempotently rerunnable; reruns fill gaps only."
+  - "Version-pin all dependencies in requirements.txt."
+  - "Log exact model version strings returned by the API, not just the requested model_id."
+  - "Commit after every phase with a message referencing phase and gate status."
+  - "No fine-tuning, no local weights, no activation access, no GPU-dependent code, ever."

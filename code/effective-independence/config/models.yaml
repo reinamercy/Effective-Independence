@@ -1,0 +1,101 @@
+# MODEL CONFIGURATION — revised 2026-08-11 to an all-free-tier set.
+#
+# Original set (Claude Sonnet/Haiku/Opus 5 + GPT-5.6 Terra + Gemini 3.1 Pro)
+# required a funded Anthropic billing account, which the project owner does
+# not have. See logs/decisions.md for the full rationale. All models below
+# are free-tier as of Aug 2026: Gemini via Google AI Studio (Flash-Lite,
+# Flash, and 2.5 Pro are free; only 3.1 Pro Preview is paid-only), plus two
+# open-weight models via OpenRouter's :free tier for real cross-lab diversity
+# on the family_diverse axis.
+#
+# CONFIRMED LIVE 2026-08-11/12 (not just public docs, which were wrong): Gemini's
+# real free-tier quota on this project is RPM=5 and RPD=20 *per model* -- far
+# below the 250-1500/day public sources reported. This is the binding
+# constraint on the whole project's pacing: 8 of the 12 configs share
+# gemini-3.5-flash's single 20/day budget (prompt_diverse x3,
+# temperature_diverse x3, size_diverse_medium, family_diverse_0), which is why
+# total_questions_target was cut to 30 and generation is expected to run in
+# small daily batches over ~1-2 weeks rather than completing in one sitting.
+# api_client.py's rate limiter is keyed per (provider, model_id), not just
+# provider, so gemini-3.5-flash-lite/2.5-pro/OpenRouter models aren't
+# needlessly throttled by gemini-3.5-flash's limit.
+# OpenRouter's free daily quota is 50/day with zero lifetime spend, or
+# 1000/day if the account has ever added $10+ in credit (one-time, not a
+# spend requirement) -- not yet confirmed live the way Gemini's was.
+
+providers:
+  google:
+    api_key_env: "GOOGLE_API_KEY"
+    rate_limit_rpm: 5           # confirmed live 2026-08-12: RPM=5, RPD=20, per model
+  openrouter:
+    api_key_env: "OPENROUTER_API_KEY"
+    rate_limit_rpm: 15          # free tier is 20 rpm; kept a margin — not yet confirmed live
+
+# Used for prompt_diverse and temperature_diverse axes.
+mid_tier_model:
+  provider: google
+  model_id: "gemini-3.5-flash"
+  price_per_m_tokens: {input: 0.0, output: 0.0}   # free tier
+
+# Used for size_diverse axis — one family (Google), 3 sizes.
+size_family:
+  provider: google
+  small:
+    model_id: "gemini-3.5-flash-lite"
+    price_per_m_tokens: {input: 0.0, output: 0.0}
+  medium:
+    model_id: "gemini-3.5-flash"
+    price_per_m_tokens: {input: 0.0, output: 0.0}
+  flagship:
+    model_id: "gemini-3.7-flash"
+    price_per_m_tokens: {input: 0.0, output: 0.0}
+    note: >
+      Second swap, 2026-08-15 (same day as the first). gemini-pro-latest
+      turned out to resolve to gemini-3.1-pro under the hood, which returns
+      429 RESOURCE_EXHAUSTED with "limit: 0" on every quota dimension for
+      this account -- i.e. permanently paid-only on the free tier, not
+      exhausted. (The earlier "confirmed live, 429 means it's usable" note
+      was wrong: a 429 with limit:0 is a permanent block, same effective
+      outcome as gemini-2.5-pro's 404, just a different error shape --
+      caught this only because the actual pilot run surfaced it, a raw
+      one-off test call apparently returned a misleading transient result.)
+      No Gemini model literally branded "Pro" is free on this account as of
+      2026-08-15. Fell back to gemini-3.7-flash (the newest Flash
+      generation available) as a "flagship-of-the-Flash-tier" proxy rather
+      than a true Pro-class model -- NOT YET LIVE-VERIFIED (today's quota
+      was already spent testing other things; a raw un-cached SDK test call
+      hung for minutes retrying an already-exhausted model with no fast-fail
+      logic, so testing was deferred to the next real pilot run instead,
+      which uses api_client.py's DailyQuotaExhaustedError fast-fail and
+      won't hang). CHECK THE NEXT run_pilot.py OUTPUT for this model_id
+      before trusting it.
+      Honesty note for the paper: size_diverse's "flagship" tier is
+      therefore not a genuine large/frontier model, just the newest
+      available Flash-tier model -- weaker size-diversity signal than
+      originally intended (small/medium/flagship implied meaningfully
+      different parameter scales, not generation bumps within one tier).
+
+# Used for family_diverse axis — 3 different labs: Google (closed-weight) + Zhipu AI and
+# NVIDIA (open-weight, via OpenRouter's rotating free tier).
+# SECOND ROTATION, 2026-08-29: openai/gpt-oss-20b:free started 404ing mid-Phase-2 with
+# "This model is unavailable for free. The paid version is available now" -- a permanent
+# de-listing, not a quota/transient error (21/30 family_diverse_1 cells failed identically).
+# Re-checked https://openrouter.ai/api/v1/models live: no OpenAI-branded model remains on
+# the free tier at all. Swapped OpenAI's slot to z-ai/glm-5.2:free (Zhipu AI/GLM) --
+# a genuinely distinct lab from Google/NVIDIA, comparable general-purpose capability tier to
+# what gpt-oss-20b provided (vs. e.g. the much smaller liquid/lfm-2.5-2.6b:free). Cells
+# already generated under the old openai/gpt-oss-20b:free slug are cache-keyed to that
+# model_id and are NOT reused -- family_diverse_1 restarts from 0/30 under the new slug
+# (see logs/decisions.md; this could not be avoided since the cache is correctly keyed
+# per-model, not per-axis-slot). nvidia/nemotron-3-ultra-550b-a55b:free re-verified live,
+# still free, unchanged.
+family_diverse_models:
+  - provider: google
+    model_id: "gemini-3.5-flash"
+    price_per_m_tokens: {input: 0.0, output: 0.0}
+  - provider: openrouter
+    model_id: "z-ai/glm-5.2:free"
+    price_per_m_tokens: {input: 0.0, output: 0.0}
+  - provider: openrouter
+    model_id: "nvidia/nemotron-3-ultra-550b-a55b:free"
+    price_per_m_tokens: {input: 0.0, output: 0.0}
