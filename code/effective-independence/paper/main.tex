@@ -29,16 +29,12 @@
   {\usepackage{placeins}}
   {\providecommand{\FloatBarrier}{\par}}
 
-% Marks a results-bearing value that does not exist yet. Never replace with
-% an invented number; replace only with a real computed result.
-\newcommand{\pending}[1]{\textcolor{red}{[PENDING: #1]}}
-
 % The paper refers to several files in the project's source tree (the frozen
 % spec, the model config, the decision log); this is where a reader finds them.
 \newcommand{\repourl}{\url{https://github.com/reinamercy/Effective-Independence}}
 
 % Marks a value that IS a real computed result, but from a run that has not
-% yet reached full coverage (249/360 cells as of 2026-09-13; see
+% yet reached full coverage (249/360 cells as of 2026-09-14; see
 % Sec.~\ref{sec:results} and Limitations) -- flagged distinctly from
 % \pending so a reader can tell "real but preliminary" apart from
 % "not computed at all." Replace with \relax (i.e. remove the wrapper) once
@@ -587,7 +583,7 @@ All pairs & 53 / 66 & 80\% \\
 \begin{figure}[!htb]
 \centering
 \includegraphics[width=\linewidth]{figures/nesting_by_pair_type.png}
-\caption{How often one member's errors are a strict subset of the other's, by how genuinely different the two members are (\prelim{preliminary, 249/360 cells}).}
+\caption{How often one member's errors are a strict subset of the other's, by how genuinely different the two members are (\prelim{249/360 cells}).}
 \label{fig:nesting}
 \end{figure}
 
@@ -694,7 +690,7 @@ allocations against each other and do not attempt to.}
 
 \begin{table}[!htb]
 \centering
-\caption{Allocations at a matched budget of $k=3$ API calls per question (\prelim{preliminary, 249/360 cells}). Every row costs the same. The $\phi$ column overstates the spread because it is capped by differences in member accuracy (Sec.~\ref{sec:marginalbound}); the $Q$ and nesting columns are the ones to read.}
+\caption{Allocations at a matched budget of $k=3$ API calls per question (\prelim{249/360 cells}). Every row costs the same. The $\phi$ column overstates the spread because it is capped by differences in member accuracy (Sec.~\ref{sec:marginalbound}); the $Q$ and nesting columns are the ones to read.}
 \label{tab:budget}
 \begin{tabular}{lccc}
 \toprule
