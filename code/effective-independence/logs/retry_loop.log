@@ -1,0 +1,24 @@
+=== retry loop started 2026-09-17 01:21:19 ===
+starting coverage: 252/360
+01:47:22 attempt 1: 252 -> 252 (+0)
+10:32:08 attempt 2: 252 -> 253 (+1)
+11:58:11 attempt 3: 253 -> 253 (+0)
+14:29:29 attempt 4: 253 -> 258 (+5)
+14:29:29 quota appears reset (+5); retrying right away
+14:55:32 attempt 5: 258 -> 258 (+0)
+18:25:22 attempt 6: 258 -> 259 (+1)
+20:09:53 attempt 7: 259 -> 259 (+0)
+21:35:38 attempt 8: 259 -> 259 (+0)
+11:48:48 attempt 9: 259 -> 260 (+1)
+14:42:32 attempt 10: 260 -> 290 (+30)
+14:42:32 quota appears reset (+30); retrying right away
+15:10:26 attempt 11: 290 -> 298 (+8)
+15:10:26 quota appears reset (+8); retrying right away
+15:27:36 attempt 12: 298 -> 302 (+4)
+16:43:38 attempt 13: 302 -> 302 (+0)
+19:01:40 attempt 14: 302 -> 302 (+0)
+20:17:42 attempt 15: 302 -> 302 (+0)
+21:33:44 attempt 16: 302 -> 302 (+0)
+08:59:09 attempt 17: 302 -> 305 (+3)
+11:00:05 attempt 18: 305 -> 305 (+0)
+=== retry loop finished 2026-09-19 12:00:06 at 305/360 ===

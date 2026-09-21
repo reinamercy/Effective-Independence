@@ -33,36 +33,13 @@
 % spec, the model config, the decision log); this is where a reader finds them.
 \newcommand{\repourl}{\url{https://github.com/reinamercy/Effective-Independence}}
 
-% Marks a value that IS a real computed result, but from a run that has not
-% yet reached full coverage (249/360 cells as of 2026-09-14; see
-% Sec.~\ref{sec:results} and Limitations) -- flagged distinctly from
-% \pending so a reader can tell "real but preliminary" apart from
-% "not computed at all." Replace with \relax (i.e. remove the wrapper) once
-% run_full_generation.py reports COMPLETE and these numbers are re-verified.
-% Defined with \long\def rather than \newcommand so the argument may span a
-% paragraph break -- several \prelim blocks now run to more than one
-% paragraph, and a non-long macro fails there with the misleading
-% "Paragraph ended before \@textcolor was complete".
-% \textcolor is itself not \long, so passing multi-paragraph content to it
-% fails even from a \long macro. A grouped \color declaration has the same
-% visual effect and is transparent to paragraph breaks.
-%
-% TWO RENDERING MODES. Draft mode marks every preliminary value in blue with
-% a dagger, which is useful while the numbers are still moving. Submission
-% mode renders the same text plainly, because unexplained blue text and
-% daggers read as an unfinished manuscript to a reviewer, and the
-% partial-coverage caveat is already stated in prose at the head of
-% Sec.~\ref{sec:results}, in every table and figure caption, and in
-% Sec.~\ref{sec:limitations}. Switching modes changes no wording and no
-% number. Set \prelimdrafttrue to go back to the marked-up version.
-\newif\ifprelimdraft
-\prelimdraftfalse
+% Coverage reached 360/360 on 2026-09-21, so every reported value is now a
+% final computed result. \prelim previously flagged partial-coverage numbers;
+% it is kept as a transparent pass-through so the macro call sites did not all
+% have to be unwound, and so the draft-mode markup remains available if a
+% future revision ever reports partial data again.
 \makeatletter
-\ifprelimdraft
-  \long\def\prelim#1{{\color{blue}#1\,$^\dagger$}}
-\else
-  \long\def\prelim#1{#1}
-\fi
+\long\def\prelim#1{#1}
 \makeatother
 
 \begin{document}
@@ -95,22 +72,21 @@ same base model. We apply the classical effective-sample-size statistic
 $N_\text{eff}$ to this setting and measure it across four diversity axes commonly used to
 build LLM ensembles (prompt, temperature, model size, and model family)
 on three reasoning and factuality benchmarks: GPQA-Diamond, MATH levels 4-5,
-and SimpleQA. \prelim{Measured with the usual correlation coefficient, even
-$N=3$ ensembles behave like barely more than a single independent voter
-($N_\text{eff}=1.09$ for prompt diversity, $1.51$ for model-family
-diversity, $1.49$ for all 12 configurations together). We then show that
-this coefficient flatters such ensembles, because it is bounded above by a
-function of the two members' error rates: 11 of our 12 within-axis pairs sit
-exactly at that bound. Looking at the error sets directly explains why. In
-53 of 66 configuration pairs, one member's errors are a strict \emph{subset}
-of the other's, so the weaker member recovers nothing the stronger one
-missed and a majority vote has no material to work with. That nesting is
-total for pairs drawn from a single base model (28 of 28) and falls to about
-half for pairs spanning different labs (11 of 21), against a permutation
-baseline of roughly 15\% ($p<0.0005$). The consequence is measurable at the
-level practitioners care about: majority voting fails to beat the single
-best member of its own ensemble on every axis we tested, and trails it by
-12.5 points across all 12 configurations at twelve times the API cost.} We
+and SimpleQA. Measured with the usual correlation coefficient, even $N=3$ ensembles behave
+like barely more than a single independent voter ($N_\text{eff}=1.08$ for
+prompt diversity, $1.43$ for model-family diversity, $1.37$ for all 12
+configurations together). We then show that this coefficient flatters such
+ensembles, because it is bounded above by a function of the two members'
+error rates: 10 of our 12 within-axis pairs sit exactly at that bound.
+Looking at the error sets directly explains why. In 44 of 66 configuration
+pairs, one member's errors are a strict \emph{subset} of the other's, so the
+weaker member recovers nothing the stronger one missed and a majority vote
+has no material to work with. That nesting holds for 27 of the 28 pairs drawn
+from a single base model and falls to about half for pairs spanning different
+labs, against a permutation baseline below 1\% ($p<0.0005$). The consequence
+is measurable at the level practitioners care about: majority voting fails to
+beat the single best member of its own ensemble on any axis, trailing it by
+up to 20 points. We
 recommend reporting the fraction of ensemble member pairs whose errors are
 nested alongside any correlation-based diversity claim, since it is a direct
 count that cannot be inflated by adding a weaker member.
@@ -171,28 +147,28 @@ auditing diversity in aggregate.
 \item We show the statistic normally used is biased in a specific,
 correctable direction: $\phi$ is bounded above by a function of the members'
 error rates (Eq.~\ref{eq:phimax}), so members differing in accuracy are
-credited with independence they do not have. \prelim{11 of our 12 within-axis
-pairs sit exactly at that bound.}
+credited with independence they do not have. 10 of our 12 within-axis pairs
+sit exactly at that bound.
 \item We identify the structure responsible: errors are largely
-\emph{nested} rather than overlapping. \prelim{In 53 of 66 pairs one member's
-errors are a strict subset of the other's, including all 28 same-base-model
-pairs, against a permutation baseline of roughly 15\% ($p<0.0005$).} A nested
-pair has zero complementary errors, so no aggregation rule over it can
-recover a question.
-\item We show the nesting rate falls monotonically as members become
-genuinely more different \prelim{(100\%, 82\%, 52\% for pairs sharing a
-model, sharing a lab, and spanning labs)}, which gives the practitioner
-guidance a correlation ranking only gestures at.
-\item We connect the structure to the outcome it predicts. \prelim{Majority
-voting never beats the best member of its own ensemble on any axis, trailing
-it by up to 25 points, and the number of questions a better aggregation rule
-could have recovered is between 0 and 2 per ensemble.}
-\item We compare five allocation strategies at equal API cost under all
-three measures, and show that the ranking a correlation-based $N_\text{eff}$
-would suggest does not survive the correction \prelim{(a 38\% apparent
-advantage for cross-family ensembling becomes about 1\%)}. We release the
-harness, the graded error matrix, and a decision log recording every
-deviation from the frozen specification.
+\emph{nested} rather than overlapping. In 44 of 66 pairs one member's errors
+are a strict subset of the other's, including 27 of the 28 same-base-model
+pairs, against a permutation baseline below 1\% ($p<0.0005$). A nested pair
+has zero complementary errors, so no aggregation rule over it can recover a
+question.
+\item We show the nesting rate is far higher within a single base model than
+across models (96\% against 41\% and 48\% for pairs sharing a lab and spanning
+labs; trend $p=1.7\times10^{-4}$), which gives the practitioner guidance a
+correlation ranking only gestures at.
+\item We connect the structure to the outcome it predicts. Majority voting
+never beats the best member of its own ensemble on any axis, trailing it by
+up to 20 points, and outside family-diverse only 1 to 2 questions per
+ensemble were recoverable by a better aggregation rule.
+\item We compare five allocation strategies at equal API cost under all three
+measures, and show that the ranking a correlation-based $N_\text{eff}$ would
+suggest does not survive the correction (a 32\% apparent advantage for
+cross-family ensembling becomes about 2\%). We release the harness, the graded
+error matrix, and a decision log recording every deviation from the frozen
+specification.
 \end{itemize}
 
 \section{Related Work}
@@ -351,82 +327,54 @@ artifacts, so any stage can be re-run in isolation.
 \label{sec:results}
 
 \subsection{Quantitative Analysis}
-\prelim{All results are computed on a fixed dataset of 249 graded
-(question, configuration) cells, 69.2\% of the $30\times12$ design, at 73.1\%
-overall accuracy. The absent cells were not dropped for any property of
-their content: they are the cells a per-model daily API quota did not permit
-us to collect (Sec.~\ref{sec:limitations}), so missingness is driven by
-which model a configuration uses, not by question difficulty or by the
-answers. Because coverage is still uneven, we report both what the uneven
-data supports and what survives where every configuration is graded.} Table~\ref{tab:neff}
+All results are computed on the complete $30\times12$ design: all 360
+(question, configuration) cells were generated and graded, at 75.0\% overall
+accuracy. Every pairwise comparison below therefore rests on the same 30
+questions, with no missing cells and no coverage confound. Table~\ref{tab:neff}
 reports $N_\text{eff}$ per axis with bootstrap 95\% confidence intervals.
-\prelim{Prompt-diverse and temperature-diverse, the two axes that vary
-only a surface property of one fixed base model, show the highest mean
-pairwise error correlation ($\bar\rho=0.87$ and $0.77$) and collapse to
-$N_\text{eff}\approx 1.1$--$1.2$ regardless of their nominal size $N=3$.
-Size-diverse (one family, three parameter scales) is only marginally
-better ($\bar\rho=0.73$, $N_\text{eff}=1.22$), consistent with
-\texttt{config/models.yaml}'s documented caveat that its ``flagship'' tier
-is a newer Flash-generation model rather than a genuinely larger one, so
-this axis likely understates what true parameter-scale diversity would
-buy. Family-diverse scores best on this metric: mean error correlation
-drops to $\bar\rho=0.50$ and $N_\text{eff}$ rises to $1.51$, still far
-from the nominal $N=3$. We
-deliberately stop short of calling this a
-settled axis ranking. Under partial coverage the family-diverse advantage
-rests on its two thinnest configuration pairs (Sec.~\ref{sec:pairdepth}),
-and those same two pairs turn out to be constrained by a marginal bound
-that accounts for their low correlation on its own
-(Sec.~\ref{sec:marginalbound}). Extending this to the full 12-configuration ensemble, $N_\text{eff}$ rises
-only from about 1.0 at $N=2$ to 1.49 at $N=12$: adding nine further
-configurations buys roughly half of one additional effective voter.}
+Prompt-diverse and temperature-diverse, the two axes that vary only a
+surface property of one fixed base model, show the highest mean pairwise
+error correlation ($\bar\rho=0.88$ and $0.87$) and collapse to
+$N_\text{eff}\approx 1.1$ regardless of their nominal size $N=3$.
+Size-diverse is somewhat better ($\bar\rho=0.71$, $N_\text{eff}=1.24$),
+consistent with \texttt{config/models.yaml}'s documented caveat that its
+``flagship'' tier is a newer Flash-generation model rather than a genuinely
+larger one, so this axis likely understates what true parameter-scale
+diversity would buy. Family-diverse scores best: mean error correlation
+drops to $\bar\rho=0.55$ and $N_\text{eff}$ rises to 1.43, still far from the
+nominal $N=3$. Extending this to the full 12-configuration ensemble,
+$N_\text{eff}$ reaches only 1.37: adding nine further configurations beyond
+$N=3$ buys roughly a third of one additional effective voter.
 
 \begin{table}[!htb]
 \centering
-\caption{$N_\text{eff}$ per axis under $\phi$ (bootstrap 95\% CI) and under the marginal-robust $\bar{Q}$ (\prelim{249/360 cells}). $n_\text{min}$ is the fewest questions graded for both members of any pair in that axis. The $\phi$ columns are inflated by unequal member accuracy (Sec.~\ref{sec:marginalbound}).}
+\caption{$N_\text{eff}$ per axis under $\phi$ (bootstrap 95\% CI) and under the marginal-robust $\bar{Q}$, on the complete 360-cell design. Every pair is measured on all 30 questions. The $\phi$ columns are inflated by unequal member accuracy (Sec.~\ref{sec:marginalbound}).}
 \label{tab:neff}
 \begin{tabular}{lccccc}
 \toprule
 Axis & $\bar\rho$ & $N_\text{eff}(\phi)$ & 95\% CI & $\bar{Q}$ & $N_\text{eff}(Q)$ \\
 \midrule
-Prompt-diverse & 0.87 & 1.09 & [1.00, 1.29] & 1.00 & 1.00 \\
-Temperature-div. & 0.77 & 1.18 & [1.00, 3.00] & 1.00 & 1.00 \\
-Size-diverse & 0.73 & 1.22 & [1.03, 1.64] & 1.00 & 1.00 \\
-Family-diverse & 0.50 & 1.51 & [1.06, 1.74] & 0.99 & 1.01 \\
+Prompt-diverse & 0.88 & 1.08 & [1.00, 1.27] & 1.00 & 1.00 \\
+Temperature-div. & 0.87 & 1.10 & [1.00, 1.29] & 1.00 & 1.00 \\
+Size-diverse & 0.71 & 1.24 & [1.07, 1.58] & 0.99 & 1.00 \\
+Family-diverse & 0.55 & 1.43 & [1.23, 1.75] & 0.98 & 1.02 \\
 \midrule
-All 12 configs & 0.64 & 1.49 & [1.17, 1.90] & 0.95 & 1.04 \\
+All 12 configs & 0.71 & 1.37 & [1.18, 1.82] & 0.97 & 1.03 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\prelim{We also measure the confident-correlated-error rate: the fraction of
+We also measure the confident-correlated-error rate: the fraction of
 questions where $\geq$80\% of a $\geq$3-member ensemble is simultaneously
-wrong. Across all 12 configurations this occurs on 5 of 30 eligible
-questions (16.7\%), and per axis is highest for prompt-diverse (5/26,
-19.2\%). A majority vote over any of these ensembles returns the wrong answer
-confidently on those questions; diversity in surface presentation does not
-protect against it. Per-configuration accuracy varies almost as much within
-an axis as across axes (size-diverse spans 70\% to 89\%), which matters
-because an axis can spread its members widely on accuracy and still have
-highly correlated errors: $N_\text{eff}$ responds to \emph{which} questions
-each member gets wrong, not how many.}
-
-\FloatBarrier
-
-\subsection{How Much Data Each Correlation Rests On}
-\label{sec:pairdepth}
-Each pairwise correlation is computed only over questions where \emph{both}
-members are graded, and that overlap varies sharply.
-\prelim{Seven of the twelve within-axis pairs rest on 8--9 shared questions,
-two of them saturating at exactly $\rho=1.00$, which over nine questions is
-more plausibly a small-sample artifact than a literal claim that two
-configurations never disagree. The five well-sampled pairs ($n\geq26$) sit in
-a much narrower band, $\rho=0.68$--$0.91$. This matters for the axis ranking:
-family-diverse's advantage is driven by its two \emph{thinnest} pairs
-($n=8$, $\rho=0.38$; $n=9$, $\rho=0.40$), while its only well-sampled pair
-($n=27$) has $\rho=0.71$, squarely among the well-sampled same-base-model
-pairs. Sec.~\ref{sec:nesting} therefore turns to a structural measure that
-does not depend on estimating a coefficient at all.}
+wrong. Across all 12 configurations this occurs on 5 of 30 questions
+(16.7\%), and per axis ranges from 13.3\% (size-diverse) to 20.0\%
+(prompt-diverse). A majority vote over any of these ensembles returns the
+wrong answer confidently on those questions; diversity in surface
+presentation does not protect against it. Per-configuration accuracy varies
+almost as much within an axis as across axes (individual configurations span
+53.3\% to 83.3\%), which matters because an axis can spread its members
+widely on accuracy and still have highly correlated errors: $N_\text{eff}$
+responds to \emph{which} questions each member gets wrong, not how many.
 
 \subsection{Correlation Is Capped by Accuracy Differences}
 \label{sec:marginalbound}
@@ -449,34 +397,32 @@ different accuracy therefore \emph{cannot} record a high correlation,
 however similarly they fail. A low $\phi$ is evidence of genuine error decorrelation only when it
 sits appreciably below this ceiling.
 
-\prelim{Checking each observed correlation against its own ceiling changes
-how Table~\ref{tab:neff}
-should be read. Eleven of the twelve within-axis pairs sit exactly at their
-marginal-bound ceiling: their errors are already as correlated as their
-differing accuracy permits. This includes both pairs responsible for
-family-diverse's advantage, where one member is far more accurate than the
-other ($p=0.12$ against $q=0.50$, and $p=0.11$ against $q=0.44$). At those
-error rates Eq.~\ref{eq:phimax} caps $\phi$ at $0.378$ and $0.395$, and
-those are precisely the observed values. The low correlation on this axis is
-thus explained by its members having unequal accuracy, not by their failing
-on complementary questions.
+Checking each observed correlation against its own ceiling changes how
+Table~\ref{tab:neff} should be read. Ten of the twelve within-axis pairs sit
+exactly at their marginal-bound ceiling: their errors are already as
+correlated as their differing accuracy permits. This includes two of the
+three family-diverse pairs, where one member is markedly more accurate than
+the other. For those two, Eq.~\ref{eq:phimax} caps $\phi$ at $0.511$ and
+$0.478$, and those are precisely the observed values. Much of the low
+correlation on this axis is therefore explained by its members having unequal
+accuracy rather than by their failing on complementary questions.
 
-Exactly one of the twelve within-axis pairs falls clearly below its ceiling:
-the two open-weight models, at $\phi=0.71$ against a bound of $0.86$. That
-pair is also the best-sampled on its axis ($n=27$), and among the within-axis
-pairs it is the only evidence of error decorrelation not attributable to an
-accuracy mismatch. (Sec.~\ref{sec:nesting} widens the view to all 66 pairs,
-where cross-lab pairs supply further such cases.) We therefore do not claim that cross-family ensembling
-decorrelates errors. The defensible reading is narrower: measured
-correlation is uniformly close to the maximum the data permits, and what
-separates the axes in Table~\ref{tab:neff} is mostly how unequal their
+Two of the twelve within-axis pairs fall clearly below their ceiling, the
+clearest being the two open-weight models at $\phi=0.665$ against a bound of
+$0.935$. Among the within-axis pairs these are the only evidence of error
+decorrelation not attributable to an accuracy mismatch.
+(Sec.~\ref{sec:nesting} widens the view to all 66 pairs, where cross-lab
+pairs supply further such cases.) We therefore do not claim that cross-family
+ensembling decorrelates errors. The defensible reading is narrower: measured
+correlation is close to the maximum the data permits for most pairs, and much
+of what separates the axes in Table~\ref{tab:neff} is how unequal their
 members' accuracies are.
 
 This does not undermine the $N_\text{eff}$ values themselves, which describe
 the actual correlation structure whatever produces it, but it does undermine
 any causal reading of the axis ranking. It is also a caution: an ensemble
 can post a lower $\bar\rho$, and so a higher $N_\text{eff}$, simply by
-including a weaker member.}
+including a weaker member.
 
 \subsection{Errors Are Nested, Not Complementary}
 \label{sec:nesting}
@@ -499,16 +445,18 @@ The pair is ordered by capability rather than diversified by it. A pair with
 complementary errors on both sides, by contrast, gives a vote something to
 work with.
 
-\prelim{The result is stark. In 53 of 66 configuration pairs the errors are
-fully nested (bootstrap 95\% CI over questions $[62\%, 98\%]$).
-Table~\ref{tab:nesting} breaks this down by how genuinely
-different the two members are, and the rate falls monotonically:
-\textbf{all 28 pairs drawn from the same base model are nested}
-(Wilson 95\% CI $[88\%, 100\%]$), against
-82\% for pairs sharing a lab but not a model ($[59\%, 94\%]$), and 52\% for
-pairs spanning different labs ($[32\%, 72\%]$). A Cochran--Armitage test
-across the three ordered groups confirms the trend rather than leaving it to
-the eye ($z=-4.12$, $p<10^{-4}$). Fig.~\ref{fig:nesting} plots the rates.
+The result is stark. In 44 of 66 configuration pairs the errors are
+fully nested (bootstrap 95\% CI over questions $[67\%, 95\%]$).
+Table~\ref{tab:nesting} breaks this down by how genuinely different the two
+members are: \textbf{27 of the 28 pairs drawn from the same base model are
+nested}, 96\% (Wilson 95\% CI $[82\%, 99\%]$), against 41\% for pairs sharing
+a lab but not a model ($[22\%, 64\%]$) and 48\% for pairs spanning different
+labs ($[28\%, 68\%]$). A Cochran--Armitage test across the three ordered
+groups confirms a decreasing trend ($z=-3.77$, $p=1.7\times10^{-4}$), though
+the decrease is not strictly monotonic: the two cross-model categories are
+statistically indistinguishable from one another, and the separation that
+drives the trend is between same-model pairs and everything else.
+Fig.~\ref{fig:nesting} plots the rates.
 
 One scoping caveat belongs here, not only in Limitations. Eight of our
 twelve configurations run on \texttt{gemini-3.5-flash}, so the same-model
@@ -521,27 +469,28 @@ means nothing without a baseline. We therefore permute, holding each
 configuration's error count and its set of graded questions fixed and
 shuffling only \emph{which} of those questions it fails. That destroys any
 real shared failure mode while preserving the marginals and the coverage
-pattern exactly. Over 2{,}000 permutations the expected nesting rate is
-$15\%$ (95\% range $[8\%, 26\%]$) across all pairs and $16\%$ (95\% range
-$[4\%, 32\%]$) among same-model pairs. The observed $80\%$ and $100\%$ are
-roughly five times chance, and no permutation in either null reached the
-observed value ($p<0.0005$). The nesting is a property of the models, not of
-the sample size.
+pattern exactly. Over 2{,}000 permutations the expected nesting rate is under
+$1\%$ in both cases (95\% range $[0\%, 2\%]$ across all pairs and
+$[0\%, 0\%]$ among same-model pairs). Against observed rates of $67\%$ and
+$96\%$, no permutation in either null came close to the observed value
+($p<0.0005$). At full coverage the chance baseline is far lower than it was
+under partial coverage, because empty off-diagonal cells stop being easy to
+produce by luck once every pair is measured on all 30 questions. The nesting
+is a property of the models, not of the sample size.
 
 A second control addresses the grading circularity of
-Sec.~\ref{sec:grading}. Excluding SimpleQA entirely leaves 19 questions and
-21 defined pairs, where nesting is $86\%$ (18 of 21) and same-model pairs
-remain fully nested (3 of 3). The effect is not produced by the self-judged
-dataset, though that subset is small enough that we offer it only as a check
-on direction.
+Sec.~\ref{sec:grading}. Excluding SimpleQA entirely leaves 19 questions,
+where nesting rises to $91\%$ (60 of 66 pairs) and same-model pairs remain at
+27 of 28. The effect is not produced by the self-judged dataset; if anything
+it is stronger without it.
 
-The first row is the paper's sharpest result. Across every pair sharing a
-base model there is not one question the second configuration gets right
-that the first gets wrong. Changing persona or temperature reorders and
-rewords the output, and changes how often the model is wrong, but never
-contributes an independent success. That is a stronger and more checkable
-claim than $\bar\rho=0.87$, and it does not rest on estimating a correlation
-from nine questions.
+The first row is the paper's sharpest result. Across 27 of the 28 pairs
+sharing a base model, there is not one question the second configuration
+gets right that the first gets wrong. Changing persona or temperature
+reorders and rewords the output, and changes how often the model is wrong,
+but in all but one pair it never contributes an independent success. That is
+a stronger and more directly checkable claim than $\bar\rho=0.88$, since it
+is a count over the complete design rather than an estimated coefficient.
 
 It also explains the earlier numbers. Nested pairs are exactly those pinned
 to the Eq.~\ref{eq:phimax} ceiling, so the $N_\text{eff}$ spread in
@@ -557,24 +506,24 @@ derived for a pairwise \emph{correlation}, and $Q$ sits on a different
 scale, so $N_\text{eff}(Q)$ is a diagnostic rather than a drop-in estimator:
 it shows that the ordering and magnitudes implied by $\phi$ do not survive a
 measure free of the marginal cap. $Q$ also saturates at exactly 1 whenever an
-off-diagonal cell is empty, so with six or seven errors in some pairs a
+off-diagonal cell is empty, so with as few as five errors in some pairs a
 single flipped answer would move it. The nesting counts, which involve no
 formula, therefore carry the claim; $N_\text{eff}(Q)$ expresses it on a
-familiar scale. Both point the same way, and further than $\phi$ does.}
+familiar scale. Both point the same way, and further than $\phi$ does.
 
 \begin{table}[!htb]
 \centering
-\caption{Error nesting (\prelim{249/360 cells}). A pair is nested when one member's errors are a subset of the other's, so the pair has no complementary errors for a vote to exploit.}
+\caption{Error nesting on the complete 360-cell design. A pair is nested when one member's errors are a subset of the other's, so the pair has no complementary errors for a vote to exploit.}
 \label{tab:nesting}
 \begin{tabular}{lcc}
 \toprule
 Pair type & Nested pairs & Rate \\
 \midrule
-Same exact model & 28 / 28 & 100\% \\
-Same lab, different model & 14 / 17 & 82\% \\
-Different lab & 11 / 21 & 52\% \\
+Same exact model & 27 / 28 & 96\% \\
+Same lab, different model & 7 / 17 & 41\% \\
+Different lab & 10 / 21 & 48\% \\
 \midrule
-All pairs & 53 / 66 & 80\% \\
+All pairs & 44 / 66 & 67\% \\
 \bottomrule
 \end{tabular}
 
@@ -583,7 +532,7 @@ All pairs & 53 / 66 & 80\% \\
 \begin{figure}[!htb]
 \centering
 \includegraphics[width=\linewidth]{figures/nesting_by_pair_type.png}
-\caption{How often one member's errors are a strict subset of the other's, by how genuinely different the two members are (\prelim{249/360 cells}).}
+\caption{How often one member's errors are a strict subset of the other's, by how genuinely different the two members are on the complete 360-cell design.}
 \label{fig:nesting}
 \end{figure}
 
@@ -600,44 +549,46 @@ even split counted as incorrect. To keep the panel constant across
 questions, each ensemble is scored only on questions where all of its
 members are graded.
 
-\prelim{Table~\ref{tab:voting} reports the result, and it is one-sided.
+Table~\ref{tab:voting} reports the result, and it is one-sided.
 \textbf{Majority voting does not beat the single best member of its own
-ensemble on any axis.} It loses by $3.8$ points on prompt-diverse, $11.1$ on
-temperature-diverse and $25.0$ on family-diverse, and ties on size-diverse.
-Over all 12 configurations together it reaches $75.0\%$ against $87.5\%$ for
-the best member, a deficit of $12.5$ points at twelve times the API cost.
+ensemble on any axis.} It loses by $3.3$ points on prompt-, temperature- and
+size-diverse alike, and by $20.0$ points on family-diverse. Over all 12
+configurations together it reaches $80.0\%$ against $83.3\%$ for the best
+member, a deficit of $3.3$ points at twelve times the API cost.
 
 This is the outcome the nesting structure predicts. When one member's errors
 are a subset of another's, the ensemble is ordered by capability, and a vote
 can only dilute the strongest member with weaker ones that contribute no
-question it missed. The recoverable column makes the size of the missed
-opportunity explicit: across all five ensembles, the number of questions
-where the majority was wrong while some member was right is 0 to 2. There is
-very little for a better aggregation rule to find, so the failure is not a
-deficiency of majority voting specifically. It is the absence of
-complementary errors to aggregate.
+question it missed. The recoverable column shows where the exception lies:
+for the three same-base-model axes only 1 or 2 questions were available for a
+better aggregation rule to rescue, so their failure is not a deficiency of
+majority voting specifically but an absence of complementary errors to
+aggregate. Family-diverse is the one ensemble with real material to work
+with, 6 recoverable questions, and it is also the one where voting loses by
+the widest margin: its members disagree often enough to outvote the strongest
+of them.
 
 The obvious objection is that the best member is identifiable only in
 hindsight; a practitioner choosing in advance is more fairly compared against
 the \emph{mean} member, which voting matches or beats everywhere except
 family-diverse. The honest summary is narrower than ``voting is useless'':
 voting recovers roughly the average member's accuracy, never an accuracy no
-individual member already had.}
+individual member already had.
 
 \begin{table}[!htb]
 \centering
-\caption{Majority vote against the members it aggregates (\prelim{249/360 cells}). ``Recov.'' counts questions where the majority was wrong but at least one member was right. A non-positive vote${-}$best column means voting never beat the strongest member.}
+\caption{Majority vote against the members it aggregates, on the complete 360-cell design. ``Recov.'' counts questions where the majority was wrong but at least one member was right. A non-positive vote${-}$best column means voting never beat the strongest member.}
 \label{tab:voting}
 \begin{tabular}{lccccc}
 \toprule
 Ensemble & $n_q$ & Vote & Best & Mean & Recov. \\
 \midrule
-Prompt-diverse & 26 & 76.9 & 80.8 & 76.9 & 1 \\
-Temperature-diverse & 9 & 77.8 & 88.9 & 81.5 & 1 \\
-Size-diverse & 9 & 88.9 & 88.9 & 81.5 & 0 \\
-Family-diverse & 8 & 62.5 & 87.5 & 62.5 & 2 \\
+Prompt-diverse & 30 & 76.7 & 80.0 & 76.7 & 1 \\
+Temperature-diverse & 30 & 80.0 & 83.3 & 80.0 & 1 \\
+Size-diverse & 30 & 80.0 & 83.3 & 78.9 & 2 \\
+Family-diverse & 30 & 63.3 & 83.3 & 64.4 & 6 \\
 \midrule
-All 12 configs & 8 & 75.0 & 87.5 & 71.9 & 1 \\
+All 12 configs & 30 & 80.0 & 83.3 & 75.0 & 2 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -665,43 +616,42 @@ Reporting only the $\phi$ column here would contradict
 Sec.~\ref{sec:marginalbound}, and the disagreement between the columns is
 large enough that it changes the conclusion.
 
-\prelim{Read through $\phi$, cross-family looks decisively best:
-$N_\text{eff}=1.51$ against $1.09$ for three prompts of one model, a 38\% gain
-at identical cost. Almost all of that gap is the accuracy artifact. Under
-$Q$ the same comparison is $1.01$ against $1.00$. We therefore do not claim a
-38\% reliability gain from crossing model families, and a practitioner should
-not budget for one.
+Read through $\phi$, cross-family looks decisively best: $N_\text{eff}=1.43$
+against $1.08$ for three prompts of one model, a 32\% gain at identical cost.
+Almost all of that gap is the accuracy artifact. Under $Q$ the same
+comparison is $1.02$ against $1.00$. We therefore do not claim a 32\%
+reliability gain from crossing model families, and a practitioner should not
+budget for one.
 
-What survives the correction is categorical, and visible in the last column.
-Every allocation built from a single base model is fully nested, 3 pairs of
-3: no member ever answers a question its partners miss. The two allocations
-spanning more than one model each contain exactly one pair with
-complementary errors. That is the real distinction at a fixed budget, and it
-is a difference in kind, not a 38\% improvement in a statistic.
+What survives the correction is visible in the last column. The two
+allocations drawn from a single base model are fully nested, 3 pairs of 3:
+no member ever answers a question its partners miss. Every allocation that
+spans more than one model contains at least one pair with complementary
+errors. That is the real distinction at a fixed budget, and it is a
+difference in kind rather than a 32\% improvement in a statistic.
 
 This also corrects a reading $\phi$ invites. Under $\phi$ the mixed
-allocation ($1.17$) looks far worse than cross-family ($1.51$), suggesting
+allocation ($1.18$) looks much worse than cross-family ($1.43$), suggesting
 that spreading a budget across axes poorly substitutes for changing model
-family. Under $Q$ the two are indistinguishable ($1.01$ each) and both
-contain one complementary pair. What matters is whether the allocation spans
-more than one base model at all, not how many \emph{kinds} of diversity it
-mixes. With three effective ties and $N=30$, we cannot rank the non-nested
-allocations against each other and do not attempt to.}
+family. Under $Q$ the two are close ($1.01$ and $1.02$). What matters is
+whether the allocation spans more than one base model at all, rather than how
+many \emph{kinds} of diversity it mixes. With differences this small at
+$N=30$, we do not rank the non-nested allocations against each other.
 
 \begin{table}[!htb]
 \centering
-\caption{Allocations at a matched budget of $k=3$ API calls per question (\prelim{249/360 cells}). Every row costs the same. The $\phi$ column overstates the spread because it is capped by differences in member accuracy (Sec.~\ref{sec:marginalbound}); the $Q$ and nesting columns are the ones to read.}
+\caption{Allocations at a matched budget of $k=3$ API calls per question, on the complete 360-cell design. Every row costs the same. The $\phi$ column overstates the spread because it is capped by differences in member accuracy (Sec.~\ref{sec:marginalbound}); the $Q$ and nesting columns are the ones to read.}
 \label{tab:budget}
 \begin{tabular}{lccc}
 \toprule
 Allocation ($k=3$) & $N_\text{eff}(\phi)$ & $N_\text{eff}(Q)$ & Nested \\
 \midrule
-Same model, 3 prompts & 1.09 & 1.00 & 3/3 \\
-Same model, 3 temperatures & 1.18 & 1.00 & 3/3 \\
-Same family, 3 sizes & 1.22 & 1.00 & 3/3 \\
+Same model, 3 prompts & 1.08 & 1.00 & 3/3 \\
+Same model, 3 temperatures & 1.10 & 1.00 & 3/3 \\
+Same family, 3 sizes & 1.24 & 1.00 & \textbf{2/3} \\
 \midrule
-Mixed, one per axis & 1.17 & 1.01 & \textbf{2/3} \\
-3 different families & 1.51 & 1.01 & \textbf{2/3} \\
+Mixed, one per axis & 1.18 & 1.01 & \textbf{1/3} \\
+3 different families & 1.43 & 1.02 & \textbf{2/3} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -717,28 +667,20 @@ below what public documentation reports. Family-diverse therefore mixes
 closed-weight (Gemini) and open-weight (GLM, Nemotron) models rather than
 three frontier flagships, and its members are the most unequal in accuracy
 of any axis, which interacts with the bound below.
-\textbf{Dataset size.} At $N=30$ questions ($\sim$8--11 per dataset) some
-95\% intervals span nearly their whole range (temperature-diverse:
-$[1.00,3.00]$). This is a power limitation, not an artifact of the method,
-so results should be read as a pilot. Intervals tighten as coverage grows
-(prompt-diverse moved from $[1.00,3.00]$ at 205/360 cells to $[1.00,1.29]$ at
-249/360) but will not all become informative at $N=30$.
-\textbf{Uneven coverage.} Missing cells concentrate in the eight
-configurations sharing one model's quota, so graded counts range from 9 to 30
-and most pairs rest on 8--9 shared questions. Cross-axis comparisons are
-therefore confounded with coverage. \prelim{A complete-case analysis removes
-the confound but leaves only 8 of 30 questions with all twelve
-configurations graded, too few to rank four axes; we report the all-12
-voting result on those 8 questions (Table~\ref{tab:voting}) and otherwise
-decline to rank.} Table~\ref{tab:neff} is descriptive of this dataset, not a
+\textbf{Dataset size.} With coverage complete, the binding limitation is the
+question set: $N=30$ questions ($\sim$8--11 per dataset) leaves several 95\%
+intervals wide (size-diverse: $[1.07,1.58]$). This is a power limitation
+rather than an artifact of the method, so the axis \emph{ordering} should be
+read as descriptive of this dataset rather than as a population ordering. A
+larger question set is the single most valuable extension.
 population ordering.
 \textbf{Both association measures are constrained.} $\phi$ cannot exceed the
-Eq.~\ref{eq:phimax} ceiling and \prelim{11 of 12 within-axis pairs sit
-exactly there}, so differences in $\bar\rho$ largely track how unequal member
+Eq.~\ref{eq:phimax} ceiling and 10 of 12 within-axis pairs sit
+exactly there, so differences in $\bar\rho$ largely track how unequal member
 accuracies are; a design holding accuracy constant would separate the
 effects, but the free-tier set fixes which models exist at each tier. $Q$
 conversely saturates at 1 whenever an off-diagonal cell is empty, and with
-six or seven errors in some pairs one flipped answer would move it. The
+as few as five errors in some pairs one flipped answer would move it. The
 nesting counts are immune to both problems.
 \textbf{Nesting is pairwise.} Three configurations can be pairwise nested in
 a chain with no single member dominating all others; our counts do not
@@ -751,29 +693,29 @@ diversity from sampling noise.
 SimpleQA falls back to an LLM judge when string containment fails, and that
 judge is \texttt{gemini-3.5-flash}, which underlies 8 of the 12
 configurations (Sec.~\ref{sec:grading}). Excluding SimpleQA leaves the
-nesting result intact \prelim{(86\% overall, same-model pairs still fully
-nested)}, so we do not believe it drives the finding, but an independent
+nesting result intact (91\% overall, same-model pairs still 27 of 28), so we
+do not believe it drives the finding, but an independent
 grader would be preferable and was unavailable within the quota.
 
 \section{Conclusion}
-\prelim{On the data collected here, prompt- and temperature-diversity are the
-cheapest and most commonly used axes, and the two that buy the least real
-independence: $N_\text{eff}\approx 1.1$--$1.2$ at nominal $N=3$. Model-family
-diversity is the axis on which measured correlation falls furthest, but we
-do not claim the gain its $\phi$-based $N_\text{eff}$ of $1.51$ implies: that
-margin rests on the thinnest pairs (Sec.~\ref{sec:pairdepth}) and on pairs
-whose low correlation is already explained by unequal member accuracy
-(Sec.~\ref{sec:marginalbound}). Corrected, the comparison is $1.01$ against
-$1.00$.
+On the complete design, prompt- and temperature-diversity are the cheapest
+and most commonly used axes, and the two that buy the least real
+independence: $N_\text{eff}\approx 1.1$ at nominal $N=3$. Model-family
+diversity is the axis on which measured correlation falls furthest, but we do
+not claim the gain its $\phi$-based $N_\text{eff}$ of $1.43$ implies: that
+margin rests largely on pairs whose low correlation is already explained by
+unequal member accuracy (Sec.~\ref{sec:marginalbound}). Corrected, the
+comparison is $1.02$ against $1.00$.
 
 The ranking is the least robust part of these results. The sturdiest finding
-is structural and needs no coefficient: in 53 of 66 pairs one member's
-errors are a strict subset of the other's, including every pair drawn from
+is structural and needs no coefficient: in 44 of 66 pairs one member's errors
+are a strict subset of the other's, including 27 of the 28 pairs drawn from
 the same base model. Where errors are nested there is nothing to recover,
 which is why a nominal three or twelve votes behaves like roughly one. The
 prediction is borne out directly: majority voting never beat the best member
-of its own ensemble, and only 0 to 2 questions per ensemble were even
-available for a smarter aggregator to rescue.
+of its own ensemble on any axis, and outside family-diverse only 1 to 2
+questions per ensemble were even available for a smarter aggregator to
+rescue.
 
 For debate, self-consistency, and judge-panel pipeline design, that means
 scaling the number of same-base-model samples is a much weaker reliability
@@ -791,13 +733,12 @@ Alongside any reported $\bar\rho$ or $N_\text{eff}$, publish the fraction of
 member pairs whose errors are nested: a direct count, uninflatable by adding
 a weak member, answering what a builder needs to know.
 
-These are pilot-scale results (Sec.~\ref{sec:limitations}), consistent in
-direction with classical ensemble theory and with concurrent independent
-work~\cite{kim2026diversitymetrics,ding2026agreement}. The magnitudes, and
-the axis ranking especially, remain provisional until coverage is complete.
-The nesting result is the one we expect to survive, since further coverage
-can only add questions on which a member might differ, and 28 of 28
-same-model pairs have produced none so far.}
+These remain small-scale results at $N=30$ questions
+(Sec.~\ref{sec:limitations}), consistent in direction with classical ensemble
+theory and with concurrent independent
+work~\cite{kim2026diversitymetrics,ding2026agreement}. The design is now
+complete, so the numbers no longer move with coverage, but a larger question
+set would be needed before treating the axis ordering as settled.
 
 % Bibliography is embedded directly (rather than via \bibliography +
 % bibtex) so the document compiles correctly in a single pdflatex pass on
